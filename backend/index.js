@@ -10,6 +10,7 @@ import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import dotenv from 'dotenv';
 dotenv.config();
 const port = process.env.PORT || 3000;
+const host = '0.0.0.0'; // Ensure it listens on all interfaces
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -169,4 +170,5 @@ app.get("*", (req, res) => {
 app.listen(port, () => {
   connect();
   console.log("Server running on 3000");
+  console.log(`Server running on ${host}:${port}`);
 });
