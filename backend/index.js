@@ -129,7 +129,7 @@ app.post("/api/upload-csv", ClerkExpressRequireAuth(), upload.single("file"), (r
           csvData: results,
         });
         await chat.save();
-        res.status(200).json(results);
+        res.status(200).json({ success: true, filename: req.file.originalname });
       } catch (err) {
         console.log(err);
         res.status(500).send("Error processing CSV data!");

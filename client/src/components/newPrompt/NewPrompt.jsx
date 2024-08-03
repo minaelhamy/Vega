@@ -15,6 +15,7 @@ const NewPrompt = ({ data }) => {
     dbData: {},
     aiData: {},
   });
+  const [uploadStatus, setUploadStatus] = useState({ progress: 0, success: false, filename: "" });
 
   const initialHistory = [
     {
@@ -138,16 +139,32 @@ const NewPrompt = ({ data }) => {
     formData.append("chatId", data._id); // Pass the chat ID with the form data
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload-csv`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      const result = await response.json();
-      console.log(result);
-      // Handle the result from the CSV analysis
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload-csv`);
+      xhr.withCredentials = true;
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = (event.loaded / event.total) * 100;
+          setUploadStatus({ progress: percentComplete, success: false, filename: "" });
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          setUploadStatus({ progress: 100, success: response.success, filename: response.filename });
+        } else {
+          setUploadStatus({ progress: 0, success: false, filename: "" });
+          alert("Upload failed!");
+        }
+      };
+
+      xhr.send(formData);
     } catch (err) {
       console.log(err);
+      setUploadStatus({ progress: 0, success: false, filename: "" });
+      alert("Upload failed!");
     }
   };
 
@@ -170,6 +187,11 @@ const NewPrompt = ({ data }) => {
         </div>
       )}
       <div className="endChat" ref={endRef}></div>
+      {uploadStatus.filename && (
+        <div className="uploadStatus">
+          {uploadStatus.success ? `Uploaded: ${uploadStatus.filename}` : "Upload failed!"}
+        </div>
+      )}
       <form className="newForm" onSubmit={handleSubmit} ref={formRef}>
         <Upload setImg={setImg} />
         <input id="file" type="file" multiple={false} hidden onChange={handleFileUpload} />
