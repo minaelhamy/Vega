@@ -11,6 +11,9 @@ import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import dotenv from "dotenv";
+import { Clerk } from "@clerk/clerk-sdk-node";
+
+Clerk.setClerkSecretKey(process.env.CLERK_SECRET_KEY);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +23,14 @@ const port = process.env.PORT || 3000;
 const host = '0.0.0.0'; // Ensure it listens on all interfaces
 const app = express();
 
+console.log("Environment variables:", {
+  MONGO: process.env.MONGO && "Set",
+  IMAGE_KIT_ENDPOINT: process.env.IMAGE_KIT_ENDPOINT,
+  IMAGE_KIT_PUBLIC_KEY: process.env.IMAGE_KIT_PUBLIC_KEY,
+  IMAGE_KIT_PRIVATE_KEY: process.env.IMAGE_KIT_PRIVATE_KEY && "Set",
+  CLIENT_URL: process.env.CLIENT_URL,
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY && "Set",
+});
 
 app.use(
   cors({
