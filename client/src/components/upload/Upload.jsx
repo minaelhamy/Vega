@@ -10,16 +10,18 @@ const Upload = ({ setImg, setUploadStatus }) => {
 
     setImg((prev) => ({ ...prev, isLoading: true }));
     setProgress(0);
+    console.log('Starting file upload...');
 
     try {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload`);
+      xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload-csv`);
       xhr.withCredentials = true;
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const percentComplete = (event.loaded / event.total) * 100;
           setProgress(percentComplete);
+          console.log(`Upload progress: ${percentComplete}%`);
         }
       };
 
@@ -33,10 +35,11 @@ const Upload = ({ setImg, setUploadStatus }) => {
             aiData: response.aiData,
           }));
           setUploadStatus({ progress: 100, success: response.success, filename: response.filename });
+          console.log('File uploaded successfully:', response.filename);
         } else {
           setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
           setUploadStatus({ progress: 0, success: false, filename: "" });
-          alert("Upload failed!");
+          console.error('Upload failed:', xhr.responseText);
         }
       };
 
@@ -44,7 +47,7 @@ const Upload = ({ setImg, setUploadStatus }) => {
     } catch (err) {
       setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
       setUploadStatus({ progress: 0, success: false, filename: "" });
-      alert("Upload failed!");
+      console.error('Upload error:', err);
     }
   };
 

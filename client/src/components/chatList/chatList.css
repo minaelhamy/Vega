@@ -24,7 +24,7 @@
     overflow: scroll;
   }
 
-  a {
+  .chatItem {
     padding: 10px;
     border-radius: 10px;
     display: flex;
@@ -34,15 +34,15 @@
     &:hover {
       background-color: #2c2937;
     }
-  }
 
-  .deleteIcon {
-    display: none;
-    cursor: pointer;
-  }
+    .deleteIcon {
+      display: none;
+      cursor: pointer;
+    }
 
-  a:hover .deleteIcon {
-    display: block;
+    &:hover .deleteIcon {
+      display: block;
+    }
   }
 
   .upgrade {
