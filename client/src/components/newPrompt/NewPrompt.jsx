@@ -92,8 +92,13 @@ const NewPrompt = ({ data }) => {
     if (!isInitial) setQuestion(text);
 
     try {
+      const csvData = chatHistory.find(msg => msg.csvData)?.csvData;
+      const messageWithCSV = csvData ? 
+        `${text}\n\nCSV Data: ${JSON.stringify(csvData)}` : 
+        text;
+
       const result = await chat.sendMessageStream(
-        Object.entries(img.aiData).length ? [img.aiData, text] : [text]
+        Object.entries(img.aiData).length ? [img.aiData, messageWithCSV] : [messageWithCSV]
       );
       let accumulatedText = "";
       for await (const chunk of result.stream) {
@@ -204,4 +209,4 @@ const NewPrompt = ({ data }) => {
   );
 };
 
-export default NewPrompt;
+export default New

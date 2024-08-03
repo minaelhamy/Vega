@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 
-const Upload = ({ setImg, setUploadStatus }) => {
+const Upload = ({ setImg, setUploadStatus, chatId }) => {
   const [progress, setProgress] = useState(0);
 
   const handleChange = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("chatId", chatId);
 
     setImg((prev) => ({ ...prev, isLoading: true }));
     setProgress(0);
