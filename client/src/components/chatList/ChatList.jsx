@@ -1,43 +1,49 @@
-import { Link } from "react-router-dom";
+import React from "react";
 import "./chatList.css";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-const ChatList = () => {
-  const { isPending, error, data } = useQuery({
-    queryKey: ["userChats"],
-    queryFn: () =>
-      fetch(`${import.meta.env.VITE_API_URL}/api/userchats`, {
+const ChatList = ({ selectedChatId, setSelectedChatId }) => {
+  const queryClient = useQueryClient();
+
+  const { data: chats, isLoading, error } = useQuery(["userchats"], () =>
+    fetch(`${import.meta.env.VITE_API_URL}/api/userchats`, {
+      credentials: "include",
+    }).then((res) => res.json())
+  );
+
+  const deleteMutation = useMutation({
+    mutationFn: (chatId) => {
+      return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${chatId}`, {
+        method: "DELETE",
         credentials: "include",
-      }).then((res) => res.json()),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["userchats"]);
+    },
   });
+
+  const handleDelete = (chatId) => {
+    deleteMutation.mutate(chatId);
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading chats</div>;
 
   return (
     <div className="chatList">
-      <span className="title">DASHBOARD</span>
-      <Link to="/dashboard">Create a new Chat</Link>
-      <Link to="/">Explore VEGA</Link>
-      <Link to="/">Contact</Link>
-      <hr />
-      <span className="title">RECENT CHATS</span>
-      <div className="list">
-        {isPending
-          ? "Loading..."
-          : error
-          ? "Something went wrong!"
-          : data?.map((chat) => (
-              <Link to={`/dashboard/chats/${chat._id}`} key={chat._id}>
-                {chat.title}
-              </Link>
-            ))}
-      </div>
-      <hr />
-      <div className="upgrade">
-        <img src="/logo.png" alt="" />
-        <div className="texts">
-          <span>Upgrade to VEGA Pro</span>
-          <span>Get unlimited access to all features</span>
+      {chats.map((chat) => (
+        <div
+          key={chat._id}
+          className={`chatItem ${
+            selectedChatId === chat._id ? "selected" : ""
+          }`}
+          onClick={() => setSelectedChatId(chat._id)}
+        >
+          <div className="chatTitle">{chat.title}</div>
+          <button onClick={() => handleDelete(chat._id)}>Delete</button>
         </div>
-      </div>
+      ))}
     </div>
   );
 };

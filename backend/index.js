@@ -118,11 +118,22 @@ app.post("/api/upload-csv", ClerkExpressRequireAuth(), upload.single("file"), (r
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on("data", (data) => results.push(data))
-    .on("end", () => {
+    .on("end", async () => {
       fs.unlinkSync(req.file.path); // Remove the file after processing
-      // Perform data analysis on results
-      // For demonstration, we'll just return the results
-      res.status(200).json(results);
+      try {
+        // Save CSV data to MongoDB
+        const chat = await Chat.findById(req.body.chatId);
+        chat.history.push({
+          role: "model",
+          parts: [{ text: "CSV data uploaded and analyzed" }],
+          csvData: results,
+        });
+        await chat.save();
+        res.status(200).json(results);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send("Error processing CSV data!");
+      }
     });
 });
 
@@ -182,6 +193,26 @@ app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).send("Error adding conversation!");
+  }
+});
+
+app.delete("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
+  
+  try {
+    await Chat.deleteOne({ _id: req.params.id, userId });
+    await UserChats.updateOne(
+      { userId: userId },
+      {
+        $pull: {
+          chats: { _id: req.params.id },
+        },
+      }
+    );
+    res.status(200).send("Chat deleted!");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error deleting chat!");
   }
 });
 

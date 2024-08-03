@@ -115,6 +115,7 @@ const NewPrompt = ({ data }) => {
     if (!text) return;
 
     add(text, false);
+    e.target.text.value = ""; // Clear the input box
   };
 
   // IN PRODUCTION WE DON'T NEED IT
@@ -134,6 +135,7 @@ const NewPrompt = ({ data }) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("chatId", data._id); // Pass the chat ID with the form data
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload-csv`, {
