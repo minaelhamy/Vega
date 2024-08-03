@@ -11,9 +11,10 @@ import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import dotenv from "dotenv";
-import { Clerk } from "@clerk/clerk-sdk-node";
 
-Clerk.setClerkSecretKey(process.env.CLERK_SECRET_KEY);
+const requireAuth = ClerkExpressRequireAuth({
+  secretKey: process.env.CLERK_SECRET_KEY
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +64,7 @@ app.get("/api/upload", (req, res) => {
   res.send(result);
 });
 
-app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
+app.post("/api/chats", requireAuth, async (req, res) => {
   const userId = req.auth.userId;
   const { text } = req.body;
 
