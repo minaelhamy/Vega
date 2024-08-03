@@ -124,7 +124,6 @@ const NewPrompt = ({ data }) => {
     if (!text) return;
 
     add(text, false);
-    e.target.text.value = ""; // Clear the input box
   };
 
   // Initial message handler
