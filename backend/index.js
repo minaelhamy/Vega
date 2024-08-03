@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
