@@ -8,19 +8,18 @@ import mongoose from "mongoose";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
 import dotenv from 'dotenv';
+import multer from 'multer';  // Make sure multer is imported
+import csv from 'csv-parser'; // Make sure csv-parser is imported
+import fs from 'fs';  // Make sure fs is imported
+
 dotenv.config();
+
 const port = process.env.PORT || 3000;
 const host = '0.0.0.0'; // Ensure it listens on all interfaces
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.join(__dirname, '.env') });
-
-const port = process.env.PORT || 3000;
-const host = '0.0.0.0';
-const app = express();
 
 app.use(
   cors({
@@ -53,7 +52,7 @@ app.get("/api/upload", (req, res) => {
   res.send(result);
 });
 
-app.post("/api/chats", requireAuth, async (req, res) => {
+app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
   const { text } = req.body;
 
