@@ -1,5 +1,6 @@
 .dashboardLayout {
   display: flex;
+  flex-direction: column;
   gap: 50px;
   padding-top: 20px;
   height: 100%;
@@ -11,5 +12,11 @@
   .content {
     flex: 4;
     background-color: #12101b;
+  }
+}
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .dashboardLayout {
+    flex-direction: column;
   }
 }

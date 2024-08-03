@@ -102,3 +102,15 @@
     }
   }
 }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .dashboardPage .texts {
+    width: 90%;
+    gap: 20px;
+  }
+
+  .formContainer {
+    width: 90%;
+  }
+}

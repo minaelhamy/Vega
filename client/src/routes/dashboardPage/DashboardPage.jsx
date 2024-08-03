@@ -1,64 +1,30 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import "./dashboardPage.css";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import './dashboardPage.css';
 
 const DashboardPage = () => {
-  const queryClient = useQueryClient();
-
-  const navigate = useNavigate();
-
-  const mutation = useMutation({
-    mutationFn: (text) => {
-      return fetch(`${import.meta.env.VITE_API_URL}/api/chats`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      }).then((res) => res.json());
-    },
-    onSuccess: (id) => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ["userChats"] });
-      navigate(`/dashboard/chats/${id}`);
-    },
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const text = e.target.text.value;
-    if (!text) return;
-
-    mutation.mutate(text);
-  };
   return (
     <div className="dashboardPage">
       <div className="texts">
         <div className="logo">
-          <img src="/logo.png" alt="" />
-          <h1>VEGA</h1>
+          <img src="/logo.png" alt="Logo" />
+          <h1>My App</h1>
         </div>
         <div className="options">
           <div className="option">
-            <img src="/chat.png" alt="" />
-            <span>Create a New Chat</span>
+            <img src="/icon1.png" alt="Option 1" />
+            Option 1
           </div>
           <div className="option">
-            <img src="/image.png" alt="" />
-            <span>Analyze Data</span>
-          </div>
-          <div className="option">
-            <img src="/code.png" alt="" />
-            <span>Create an Irresistible Offer</span>
+            <img src="/icon2.png" alt="Option 2" />
+            Option 2
           </div>
         </div>
       </div>
       <div className="formContainer">
-        <form onSubmit={handleSubmit}>
-          <input type="text" name="text" placeholder="Ask me anything..." />
-          <button>
-            <img src="/arrow.png" alt="" />
+        <form>
+          <input type="text" placeholder="Type something..." />
+          <button type="submit">
+            <img src="/send.png" alt="Send" />
           </button>
         </form>
       </div>
