@@ -6,9 +6,6 @@ import express from "express";
 import cors from "cors";
 import ImageKit from "imagekit";
 import mongoose from "mongoose";
-import multer from "multer";
-import csv from "csv-parser";
-import fs from "fs";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
 
@@ -39,34 +36,11 @@ const connect = async () => {
   }
 };
 
-let imagekit;
-try {
-  imagekit = new ImageKit({
-    urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
-    publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
-    privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
-  });
-  console.log("ImageKit initialized successfully");
-} catch (error) {
-  console.error("Error initializing ImageKit:", error);
-}
-
-const upload = multer({ dest: "uploads/" });
-
-const requireAuth = ClerkExpressRequireAuth({
-  secretKey: process.env.CLERK_SECRET_KEY
+const imagekit = new ImageKit({
+  urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
+  publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
 });
-
-// Log environment variables
-console.log("Environment variables:", {
-  MONGO: process.env.MONGO && "Set",
-  IMAGE_KIT_ENDPOINT: process.env.IMAGE_KIT_ENDPOINT,
-  IMAGE_KIT_PUBLIC_KEY: process.env.IMAGE_KIT_PUBLIC_KEY,
-  IMAGE_KIT_PRIVATE_KEY: process.env.IMAGE_KIT_PRIVATE_KEY && "Set",
-  CLIENT_URL: process.env.CLIENT_URL,
-  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY && "Set",
-});
-
 
 const upload = multer({ dest: "uploads/" });
 
@@ -80,37 +54,7 @@ app.post("/api/chats", requireAuth, async (req, res) => {
   const { text } = req.body;
 
   try {
-    const userChats = await UserChats.findOne({ userId: userId });
-
-    if (!userChats) {
-      // First time chat, start with initial questions
-      const initialChat = new Chat({
-        userId: userId,
-        history: [
-          { role: "model", parts: [{ text: "Welcome! What is your company name?" }] },
-          { role: "model", parts: [{ text: "Can you provide a brief about your company?" }] },
-          { role: "model", parts: [{ text: "How can I assist you today? (a) Create an irresistible offer/sales funnel, (b) Price optimization for your products, (c) Data analytics for your uploaded CSV file" }] },
-        ],
-      });
-
-      const savedChat = await initialChat.save();
-
-      const newUserChats = new UserChats({
-        userId: userId,
-        chats: [
-          {
-            _id: savedChat._id,
-            title: "Initial Chat",
-          },
-        ],
-      });
-
-      await newUserChats.save();
-
-      return res.status(201).send(savedChat._id);
-    }
-
-    // Subsequent chats
+    // CREATE A NEW CHAT
     const newChat = new Chat({
       userId: userId,
       history: [{ role: "user", parts: [{ text }] }],
@@ -118,19 +62,38 @@ app.post("/api/chats", requireAuth, async (req, res) => {
 
     const savedChat = await newChat.save();
 
-    await UserChats.updateOne(
-      { userId: userId },
-      {
-        $push: {
-          chats: {
+    // CHECK IF THE USERCHATS EXISTS
+    const userChats = await UserChats.find({ userId: userId });
+
+    // IF DOESN'T EXIST CREATE A NEW ONE AND ADD THE CHAT IN THE CHATS ARRAY
+    if (!userChats.length) {
+      const newUserChats = new UserChats({
+        userId: userId,
+        chats: [
+          {
             _id: savedChat._id,
             title: text.substring(0, 40),
           },
-        },
-      }
-    );
+        ],
+      });
 
-    res.status(201).send(savedChat._id);
+      await newUserChats.save();
+    } else {
+      // IF EXISTS, PUSH THE CHAT TO THE EXISTING ARRAY
+      await UserChats.updateOne(
+        { userId: userId },
+        {
+          $push: {
+            chats: {
+              _id: savedChat._id,
+              title: text.substring(0, 40),
+            },
+          },
+        }
+      );
+
+      res.status(201).send(newChat._id);
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send("Error creating chat!");
@@ -142,22 +105,11 @@ app.post("/api/upload-csv", ClerkExpressRequireAuth(), upload.single("file"), (r
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on("data", (data) => results.push(data))
-    .on("end", async () => {
+    .on("end", () => {
       fs.unlinkSync(req.file.path); // Remove the file after processing
-      try {
-        // Save CSV data to MongoDB
-        const chat = await Chat.findById(req.body.chatId);
-        chat.history.push({
-          role: "model",
-          parts: [{ text: "CSV data uploaded and analyzed" }],
-          csvData: results,
-        });
-        await chat.save();
-        res.status(200).json({ success: true, filename: req.file.originalname });
-      } catch (err) {
-        console.log(err);
-        res.status(500).send("Error processing CSV data!");
-      }
+      // Perform data analysis on results
+      // For demonstration, we'll just return the results
+      res.status(200).json(results);
     });
 });
 
@@ -252,7 +204,8 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
 });
 
-app.listen(port, host, () => {
+app.listen(port, () => {
   connect();
+  console.log("Server running on 3000");
   console.log(`Server running on ${host}:${port}`);
 });

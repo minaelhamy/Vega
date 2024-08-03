@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./newPrompt.css";
 import Upload from "../upload/Upload";
 import { IKImage } from "imagekitio-react";
-import model from "../../lib/gemini";
+import chat from "../../lib/gemini";
 import Markdown from "react-markdown";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -15,7 +15,6 @@ const NewPrompt = ({ data }) => {
     dbData: {},
     aiData: {},
   });
-  const [uploadStatus, setUploadStatus] = useState({ progress: 0, success: false, filename: "" });
 
   const initialHistory = [
     {
@@ -84,7 +83,7 @@ const NewPrompt = ({ data }) => {
         });
     },
     onError: (err) => {
-      console.log(err);
+      console.error(err);
     },
   });
 
@@ -108,9 +107,13 @@ const NewPrompt = ({ data }) => {
         setAnswer(accumulatedText);
       }
 
+      // Ask for feedback after providing the answer
+      setAnswer(accumulatedText + "\n\nHow would you rate this advice on a scale of 1-10? Your feedback helps me improve.");
+
       mutation.mutate();
     } catch (err) {
-      console.log(err);
+      console.error("Error in AI consultation:", err);
+      setAnswer("I apologize, but I encountered an error. Please try again.");
     }
   };
 
@@ -124,14 +127,12 @@ const NewPrompt = ({ data }) => {
     e.target.text.value = ""; // Clear the input box
   };
 
-  // IN PRODUCTION WE DON'T NEED IT
+  // Initial message handler
   const hasRun = useRef(false);
 
   useEffect(() => {
-    if (!hasRun.current) {
-      if (data && data.history && data.history.length === 1) {
-        add(data.history[0].parts[0].text, true);
-      }
+    if (!hasRun.current && data?.history?.length === 1) {
+      add(data.history[0].parts[0].text, true);
     }
     hasRun.current = true;
   }, []);
@@ -141,41 +142,23 @@ const NewPrompt = ({ data }) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("chatId", data._id); // Pass the chat ID with the form data
 
     try {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload-csv`);
-      xhr.withCredentials = true;
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = (event.loaded / event.total) * 100;
-          setUploadStatus({ progress: percentComplete, success: false, filename: "" });
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          setUploadStatus({ progress: 100, success: response.success, filename: response.filename });
-        } else {
-          setUploadStatus({ progress: 0, success: false, filename: "" });
-          alert("Upload failed!");
-        }
-      };
-
-      xhr.send(formData);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload-csv`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const result = await response.json();
+      console.log(result);
+      // Handle the result from the CSV analysis
     } catch (err) {
       console.log(err);
-      setUploadStatus({ progress: 0, success: false, filename: "" });
-      alert("Upload failed!");
     }
   };
 
   return (
     <>
-      {/* ADD NEW CHAT */}
       {img.isLoading && <div className="">Loading...</div>}
       {img.dbData?.filePath && (
         <IKImage
@@ -199,9 +182,9 @@ const NewPrompt = ({ data }) => {
       )}
       <form className="newForm" onSubmit={handleSubmit} ref={formRef}>
         <Upload setImg={setImg} />
-        <input id="file" type="file" multiple={false} hidden onChange={handleFileUpload} />
-        <input type="text" name="text" placeholder="Ask anything..." />
-        <button>
+        <input id="file" type="file" multiple={false} hidden />
+        <input type="text" name="text" placeholder="Ask for business advice..." />
+        <button type="submit">
           <img src="/arrow.png" alt="" />
         </button>
       </form>
@@ -209,4 +192,4 @@ const NewPrompt = ({ data }) => {
   );
 };
 
-export default New
+export default NewPrompt;
