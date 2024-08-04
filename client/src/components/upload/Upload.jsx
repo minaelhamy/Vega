@@ -1,78 +1,84 @@
-import React, { useState } from "react";
+import { IKContext, IKImage, IKUpload } from "imagekitio-react";
+import { useRef } from "react";
 
-const Upload = ({ setImg, setUploadStatus, chatId }) => {
-  const [progress, setProgress] = useState(0);
+const urlEndpoint = import.meta.env.VITE_IMAGE_KIT_ENDPOINT;
+const publicKey = import.meta.env.VITE_IMAGE_KIT_PUBLIC_KEY;
 
-  const authenticator = async () => {
-    try {
-      const response = await fetch("https://vega.pulsarapps.com/api/upload");
+const authenticator = async () => {
+  try {
+    const response = await fetch("https://vega.pulsarapps.com/api/upload");
 
-      setImg((prev) => ({ ...prev, isLoading: true }));
-      setProgress(0);
-      console.log('Starting file upload...');
-
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload-csv`);
-      xhr.withCredentials = true;
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = (event.loaded / event.total) * 100;
-          setProgress(percentComplete);
-          console.log(`Upload progress: ${percentComplete}%`);
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          setImg((prev) => ({
-            ...prev,
-            isLoading: false,
-            dbData: response.dbData,
-            aiData: response.aiData,
-          }));
-          setUploadStatus({ progress: 100, success: response.success, filename: response.filename });
-          console.log('File uploaded successfully:', response.filename);
-        } else {
-          setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
-          setUploadStatus({ progress: 0, success: false, filename: "" });
-          console.error('Upload failed:', xhr.responseText);
-        }
-      };
-
-      xhr.onerror = () => {
-        setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
-        setUploadStatus({ progress: 0, success: false, filename: "" });
-        console.error('Upload error:', xhr.statusText);
-      };
-
-      const formData = new FormData();
-      // Assuming you have some file input reference to append the file
-      const fileInput = document.getElementById('file');
-      if (fileInput.files.length > 0) {
-        formData.append("file", fileInput.files[0]);
-      }
-      xhr.send(formData);
-    } catch (err) {
-      setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
-      setUploadStatus({ progress: 0, success: false, filename: "" });
-      console.error('Upload error:', err);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Request failed with status ${response.status}: ${errorText}`
+      );
     }
+
+    const data = await response.json();
+    const { signature, expire, token } = data;
+    return { signature, expire, token };
+  } catch (error) {
+    throw new Error(`Authentication request failed: ${error.message}`);
+  }
+};
+
+const Upload = ({ setImg }) => {
+  const ikUploadRef = useRef(null);
+  const onError = (err) => {
+    console.log("Error", err);
   };
 
-  const handleChange = (e) => {
-    authenticator();
+  const onSuccess = (res) => {
+    console.log("Success", res);
+    setImg((prev) => ({ ...prev, isLoading: false, dbData: res }));
+  };
+
+  const onUploadProgress = (progress) => {
+    console.log("Progress", progress);
+  };
+
+  const onUploadStart = (evt) => {
+    const file = evt.target.files[0];
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImg((prev) => ({
+        ...prev,
+        isLoading: true,
+        aiData: {
+          inlineData: {
+            data: reader.result.split(",")[1],
+            mimeType: file.type,
+          },
+        },
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
-    <div className="upload">
-      <label htmlFor="file">
-        <img src="/upload.png" alt="Upload" />
-      </label>
-      <input id="file" type="file" multiple={false} hidden onChange={handleChange} />
-      {progress > 0 && <progress value={progress} max="100">{progress}%</progress>}
-    </div>
+    <IKContext
+      urlEndpoint={urlEndpoint}
+      publicKey={publicKey}
+      authenticator={authenticator}
+    >
+      <IKUpload
+        fileName="test-upload.png"
+        onError={onError}
+        onSuccess={onSuccess}
+        useUniqueFileName={true}
+        onUploadProgress={onUploadProgress}
+        onUploadStart={onUploadStart}
+        style={{ display: "none" }}
+        ref={ikUploadRef}
+      />
+      {
+        <label onClick={() => ikUploadRef.current.click()}>
+          <img src="/attachment.png" alt="" />
+        </label>
+      }
+    </IKContext>
   );
 };
 
