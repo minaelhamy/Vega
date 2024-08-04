@@ -1,19 +1,14 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import url, { fileURLToPath } from "url";
 import ImageKit from "imagekit";
 import mongoose from "mongoose";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
+import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import dotenv from 'dotenv';
-import multer from 'multer';  // Make sure multer is imported
-import csv from 'csv-parser'; // Make sure csv-parser is imported
-import fs from 'fs';  // Make sure fs is imported
-
 dotenv.config();
-
 const port = process.env.PORT || 3000;
 const host = '0.0.0.0'; // Ensure it listens on all interfaces
 const app = express();
@@ -35,7 +30,7 @@ const connect = async () => {
     await mongoose.connect(process.env.MONGO);
     console.log("Connected to MongoDB");
   } catch (err) {
-    console.error("MongoDB connection error:", err);
+    console.log(err);
   }
 };
 
@@ -44,8 +39,6 @@ const imagekit = new ImageKit({
   publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
   privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
 });
-
-const upload = multer({ dest: "uploads/" });
 
 app.get("/api/upload", (req, res) => {
   const result = imagekit.getAuthenticationParameters();
@@ -101,19 +94,6 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
     console.log(err);
     res.status(500).send("Error creating chat!");
   }
-});
-
-app.post("/api/upload-csv", ClerkExpressRequireAuth(), upload.single("file"), (req, res) => {
-  const results = [];
-  fs.createReadStream(req.file.path)
-    .pipe(csv())
-    .on("data", (data) => results.push(data))
-    .on("end", () => {
-      fs.unlinkSync(req.file.path); // Remove the file after processing
-      // Perform data analysis on results
-      // For demonstration, we'll just return the results
-      res.status(200).json(results);
-    });
 });
 
 app.get("/api/userchats", ClerkExpressRequireAuth(), async (req, res) => {
@@ -190,4 +170,5 @@ app.get("*", (req, res) => {
 app.listen(port, () => {
   connect();
   console.log("Server running on 3000");
+  console.log(`Server running on ${host}:${port}`);
 });

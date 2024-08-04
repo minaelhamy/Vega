@@ -1,47 +1,38 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './chatList.css';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from "react-router-dom";
+import "./chatList.css";
+import { useQuery } from "@tanstack/react-query";
 
-const ChatList = ({ chats }) => {
-  const queryClient = useQueryClient();
-
-  const deleteMutation = useMutation({
-    mutationFn: (chatId) => {
-      console.log(`Deleting chat with ID: ${chatId}`);
-      return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${chatId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      }).then((res) => res.json());
-    },
-    onSuccess: () => {
-      console.log('Chat deleted successfully');
-      queryClient.invalidateQueries('chats');
-    },
-    onError: (err) => {
-      console.error('Error deleting chat:', err);
-    },
+const ChatList = () => {
+  const { isPending, error, data } = useQuery({
+    queryKey: ["userChats"],
+    queryFn: () =>
+      fetch(`${import.meta.env.VITE_API_URL}/api/userchats`, {
+        credentials: "include",
+      }).then((res) => res.json()),
   });
-
-  const handleDelete = (chatId) => {
-    console.log(`Handling delete for chat ID: ${chatId}`);
-    deleteMutation.mutate(chatId);
-  };
 
   return (
     <div className="chatList">
+      <span className="title">DASHBOARD</span>
+      <Link to="/dashboard">Create a new Chat</Link>
+      <Link to="/">Explore VEGA</Link>
+      <Link to="/">Contact</Link>
       <hr />
-      <div className="title">RECENT CHATS</div>
+      <span className="title">RECENT CHATS</span>
       <div className="list">
-        {chats.map((chat) => (
-          <div key={chat._id} className="chatItem">
-            <Link to={`/chat/${chat._id}`}>{chat.title}</Link>
-            <span className="deleteIcon" onClick={() => handleDelete(chat._id)}>🗑️</span>
-          </div>
-        ))}
+        {isPending
+          ? "Loading..."
+          : error
+          ? "Something went wrong!"
+          : data?.map((chat) => (
+              <Link to={`/dashboard/chats/${chat._id}`} key={chat._id}>
+                {chat.title}
+              </Link>
+            ))}
       </div>
+      <hr />
       <div className="upgrade">
-        <img src="/logo.png" alt="Upgrade" />
+        <img src="/logo.png" alt="" />
         <div className="texts">
           <span>Upgrade to VEGA Pro</span>
           <span>Get unlimited access to all features</span>
