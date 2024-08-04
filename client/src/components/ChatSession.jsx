@@ -10,7 +10,12 @@ const ChatSession = () => {
     queryFn: () =>
       fetch(`${import.meta.env.VITE_API_URL}/api/chat-session`, {
         credentials: 'include',
-      }).then((res) => res.json()),
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      }),
   });
 
   const mutation = useMutation({
@@ -22,7 +27,12 @@ const ChatSession = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updatedSession),
-      }).then((res) => res.json()),
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      }),
   });
 
   useEffect(() => {

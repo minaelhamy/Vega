@@ -160,6 +160,16 @@ app.use((err, req, res, next) => {
   res.status(401).send("Unauthenticated!");
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "An unexpected error occurred" });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
 // PRODUCTION
 app.use(express.static(path.join(__dirname, "../client/dist")));
 

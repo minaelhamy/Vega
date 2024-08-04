@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import "./dashboardPage.css";
 import { useNavigate } from "react-router-dom";
+import ChatSession from "../../components/ChatSession";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
-
   const navigate = useNavigate();
 
   const mutation = useMutation({
@@ -19,7 +19,6 @@ const DashboardPage = () => {
       }).then((res) => res.json());
     },
     onSuccess: (id) => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["userChats"] });
       navigate(`/dashboard/chats/${id}`);
     },
@@ -32,6 +31,7 @@ const DashboardPage = () => {
 
     mutation.mutate(text);
   };
+
   return (
     <div className="dashboardPage">
       <div className="texts">
@@ -39,20 +39,7 @@ const DashboardPage = () => {
           <img src="/logo.png" alt="" />
           <h1>VEGA</h1>
         </div>
-        <div className="options">
-          <div className="option">
-            <img src="/chat.png" alt="" />
-            <span>Create a New Chat</span>
-          </div>
-          <div className="option">
-            <img src="/image.png" alt="" />
-            <span>Analyze Data</span>
-          </div>
-          <div className="option">
-            <img src="/code.png" alt="" />
-            <span>Create an Irresistible Offer</span>
-          </div>
-        </div>
+        <ChatSession />
       </div>
       <div className="formContainer">
         <form onSubmit={handleSubmit}>
