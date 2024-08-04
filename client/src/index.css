@@ -21,3 +21,9 @@ a{
     font-size: 14px;
   }
 }
+
+input {
+  background: transparent;
+  border: none;
+  color: white;
+}
