@@ -1,13 +1,8 @@
 import { Link } from "react-router-dom";
 import "./chatList.css";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const ChatList = () => {
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [chatToDelete, setChatToDelete] = useState(null);
-  const queryClient = useQueryClient();
-
   const { isPending, error, data } = useQuery({
     queryKey: ["userChats"],
     queryFn: () =>
@@ -15,36 +10,6 @@ const ChatList = () => {
         credentials: "include",
       }).then((res) => res.json()),
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: (chatId) =>
-      fetch(`${import.meta.env.VITE_API_URL}/api/chats/${chatId}`, {
-        method: "DELETE",
-        credentials: "include",
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["userChats"]);
-      setShowConfirmation(false);
-      setChatToDelete(null);
-    },
-  });
-
-  const handleDelete = (e, chatId) => {
-    e.preventDefault(); // Prevent the Link from being activated
-    setChatToDelete(chatId);
-    setShowConfirmation(true);
-  };
-
-  const confirmDelete = () => {
-    if (chatToDelete) {
-      deleteMutation.mutate(chatToDelete);
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowConfirmation(false);
-    setChatToDelete(null);
-  };
 
   return (
     <div className="chatList">
@@ -60,14 +25,9 @@ const ChatList = () => {
           : error
           ? "Something went wrong!"
           : data?.map((chat) => (
-              <div key={chat._id} className="chat-item">
-                <Link to={`/dashboard/chats/${chat._id}`}>
-                  {chat.title}
-                </Link>
-                <button className="delete-btn" onClick={(e) => handleDelete(e, chat._id)}>
-                  🗑️
-                </button>
-              </div>
+              <Link to={`/dashboard/chats/${chat._id}`} key={chat._id}>
+                {chat.title}
+              </Link>
             ))}
       </div>
       <hr />
@@ -78,13 +38,6 @@ const ChatList = () => {
           <span>Get unlimited access to all features</span>
         </div>
       </div>
-      {showConfirmation && (
-        <div className="confirmation-modal">
-          <p>Are you sure you want to delete this chat?</p>
-          <button onClick={confirmDelete}>Confirm</button>
-          <button onClick={cancelDelete}>Cancel</button>
-        </div>
-      )}
     </div>
   );
 };
