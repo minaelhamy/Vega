@@ -25,10 +25,6 @@ const chatSchema = new mongoose.Schema(
           type: String,
           required: false,
         },
-        csvData: {
-          type: Array,
-          required: false,
-        },
       },
     ],
   },

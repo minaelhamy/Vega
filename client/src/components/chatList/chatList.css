@@ -24,24 +24,12 @@
     overflow: scroll;
   }
 
-  .chatItem {
+  a {
     padding: 10px;
     border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 
     &:hover {
       background-color: #2c2937;
-    }
-
-    .deleteIcon {
-      display: none;
-      cursor: pointer;
-    }
-
-    &:hover .deleteIcon {
-      display: block;
     }
   }
 

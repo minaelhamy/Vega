@@ -35,10 +35,3 @@
     }
   }
 }
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .chatPage .wrapper .chat {
-    width: 90%;
-  }
-}
