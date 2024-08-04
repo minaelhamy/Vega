@@ -155,24 +155,6 @@ app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(401).send("Unauthenticated!");
-});
-
-// PRODUCTION
-app.use(express.static(path.join(__dirname, "../client/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-});
-
-app.listen(port, () => {
-  connect();
-  console.log("Server running on 3000");
-  console.log(`Server running on ${host}:${port}`);
-});
-
 app.delete("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
   const chatId = req.params.id;
@@ -196,13 +178,17 @@ app.delete("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
 
 app.get("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
+  console.log("Received request for chat session. User ID:", userId);
 
   try {
     let chat = await Chat.findOne({ userId });
 
     if (!chat) {
+      console.log("No existing chat found. Creating new chat for user:", userId);
       chat = new Chat({ userId });
       await chat.save();
+    } else {
+      console.log("Existing chat found for user:", userId);
     }
 
     res.status(200).json(chat);
@@ -228,4 +214,22 @@ app.put("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
     console.error(err);
     res.status(500).send("Error updating chat session");
   }
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(401).send("Unauthenticated!");
+});
+
+// PRODUCTION
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+});
+
+app.listen(port, () => {
+  connect();
+  console.log("Server running on 3000");
+  console.log(`Server running on ${host}:${port}`);
 });
