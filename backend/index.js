@@ -207,8 +207,8 @@ app.get("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
 
     res.status(200).json(chat);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching or creating chat session");
+    console.error('Error in GET /api/chat-session:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
 

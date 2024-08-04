@@ -10,10 +10,16 @@ const ChatSession = () => {
 
   const { data: chatSession, isLoading, error } = useQuery({
     queryKey: ['chatSession'],
-    queryFn: () =>
-      fetch(`${import.meta.env.VITE_API_URL}/api/chat-session`, {
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/chat-session`, {
         credentials: 'include',
-      }).then((res) => res.json()),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} ${response.statusText}. Details: ${errorText}`);
+      }
+      return response.json();
+    },
   });
 
   const mutation = useMutation({
