@@ -47,7 +47,7 @@ When crafting offers, focus on value stacking, risk reversal, and creating urgen
 `;
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro", // Using a more capable model
+  model: "gemini-1.5-pro",
   safetySetting,
 });
 
@@ -59,7 +59,7 @@ const chat = model.startChat({
     },
   ],
   generationConfig: {
-    temperature: 0.7, // Adjusted for more creative yet focused responses
+    temperature: 0.7,
     topK: 40,
     topP: 0.95,
     maxOutputTokens: 1024,

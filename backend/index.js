@@ -214,13 +214,13 @@ app.get("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
 
 app.put("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
-  const { companyName, companyBrief } = req.body;
+  const { companyName, companyBrief, history } = req.body;
 
   try {
     const chat = await Chat.findOneAndUpdate(
       { userId },
-      { companyName, companyBrief },
-      { new: true }
+      { $set: { companyName, companyBrief }, $push: { history: { $each: history } } },
+      { new: true, upsert: true }
     );
 
     res.status(200).json(chat);
