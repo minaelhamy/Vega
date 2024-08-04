@@ -3,15 +3,14 @@ import React, { useState } from "react";
 const Upload = ({ setImg, setUploadStatus, chatId }) => {
   const [progress, setProgress] = useState(0);
 
-const authenticator = async () => {
-  try {
-    const response = await fetch("https://vega.pulsarapps.com/api/upload");
-
-    setImg((prev) => ({ ...prev, isLoading: true }));
-    setProgress(0);
-    console.log('Starting file upload...');
-
+  const authenticator = async () => {
     try {
+      const response = await fetch("https://vega.pulsarapps.com/api/upload");
+
+      setImg((prev) => ({ ...prev, isLoading: true }));
+      setProgress(0);
+      console.log('Starting file upload...');
+
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${import.meta.env.VITE_API_URL}/api/upload-csv`);
       xhr.withCredentials = true;
@@ -42,12 +41,28 @@ const authenticator = async () => {
         }
       };
 
+      xhr.onerror = () => {
+        setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
+        setUploadStatus({ progress: 0, success: false, filename: "" });
+        console.error('Upload error:', xhr.statusText);
+      };
+
+      const formData = new FormData();
+      // Assuming you have some file input reference to append the file
+      const fileInput = document.getElementById('file');
+      if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+      }
       xhr.send(formData);
     } catch (err) {
       setImg((prev) => ({ ...prev, isLoading: false, error: "Upload failed!" }));
       setUploadStatus({ progress: 0, success: false, filename: "" });
       console.error('Upload error:', err);
     }
+  };
+
+  const handleChange = (e) => {
+    authenticator();
   };
 
   return (
