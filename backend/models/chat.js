@@ -6,6 +6,12 @@ const chatSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    companyName: {
+      type: String,
+    },
+    companyBrief: {
+      type: String,
+    },
     history: [
       {
         role: {

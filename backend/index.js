@@ -193,3 +193,39 @@ app.delete("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
     res.status(500).send("Error deleting chat!");
   }
 });
+
+app.get("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
+
+  try {
+    let chat = await Chat.findOne({ userId });
+
+    if (!chat) {
+      chat = new Chat({ userId });
+      await chat.save();
+    }
+
+    res.status(200).json(chat);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching or creating chat session");
+  }
+});
+
+app.put("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
+  const { companyName, companyBrief } = req.body;
+
+  try {
+    const chat = await Chat.findOneAndUpdate(
+      { userId },
+      { companyName, companyBrief },
+      { new: true }
+    );
+
+    res.status(200).json(chat);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error updating chat session");
+  }
+});
