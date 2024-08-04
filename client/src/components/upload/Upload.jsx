@@ -3,11 +3,9 @@ import React, { useState } from "react";
 const Upload = ({ setImg, setUploadStatus, chatId }) => {
   const [progress, setProgress] = useState(0);
 
-  const handleChange = async (e) => {
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("chatId", chatId);
+const authenticator = async () => {
+  try {
+    const response = await fetch("https://vega.pulsarapps.com/api/upload");
 
     setImg((prev) => ({ ...prev, isLoading: true }));
     setProgress(0);
