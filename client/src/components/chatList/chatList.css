@@ -106,3 +106,23 @@
 .confirmation-modal button:last-of-type {
   background-color: #217bfe;
 }
+
+@media (max-width: 768px) {
+  .chatList {
+    width: 100%;
+    height: auto;
+  }
+
+  .chatList .list {
+    max-height: 300px;
+  }
+
+  .chat-item {
+    padding: 10px 5px;
+  }
+
+  .delete-btn {
+    opacity: 1;
+    font-size: 14px;
+  }
+}
