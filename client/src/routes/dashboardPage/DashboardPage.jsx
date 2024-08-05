@@ -38,8 +38,20 @@ const DashboardPage = () => {
           <img src="/logo.png" alt="" />
           <h1>VEGA</h1>
         </div>
-        <h2>Welcome to VEGA, your AI Business Consultant</h2>
-        <p>Start a new chat to get personalized business advice.</p>
+        <div className="options">
+          <div className="option">
+            <img src="/chat.png" alt="" />
+            <span>Chat with VEGA</span>
+          </div>
+          <div className="option">
+            <img src="/image.png" alt="" />
+            <span>Image Analysis</span>
+          </div>
+          <div className="option">
+            <img src="/code.png" alt="" />
+            <span>Code Assistance</span>
+          </div>
+        </div>
       </div>
       <div className="formContainer">
         <form onSubmit={handleSubmit}>

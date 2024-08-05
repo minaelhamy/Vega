@@ -15,7 +15,6 @@ const NewPrompt = ({ data }) => {
     dbData: {},
     aiData: {},
   });
-  const [stage, setStage] = useState('initial');
 
   const endRef = useRef(null);
   const formRef = useRef(null);
@@ -27,14 +26,18 @@ const NewPrompt = ({ data }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (updateData) => {
+    mutationFn: () => {
       return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${data._id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          question: question.length ? question : undefined,
+          answer,
+          img: img.dbData?.filePath || undefined,
+        }),
       }).then((res) => res.json());
     },
     onSuccess: () => {
@@ -72,11 +75,7 @@ const NewPrompt = ({ data }) => {
         setAnswer(accumulatedText);
       }
 
-      mutation.mutate({
-        question: text,
-        answer: accumulatedText,
-        img: img.dbData?.filePath || undefined,
-      });
+      mutation.mutate();
     } catch (err) {
       console.error("Error in AI consultation:", err);
       setAnswer("I apologize, but I encountered an error. Please try again.");
@@ -93,17 +92,14 @@ const NewPrompt = ({ data }) => {
   };
 
   // Initial message handler
+  const hasRun = useRef(false);
+
   useEffect(() => {
-    if (data?.history?.length === 0) {
-      setStage('askName');
-      setAnswer("Hello, what is the name of your company?");
-    } else if (data?.history?.length === 2) {
-      setStage('askBrief');
-      setAnswer("Please write a brief about your company, its business model, and how it operates.");
-    } else if (data?.history?.length === 4) {
-      setStage('mainMenu');
-      setAnswer("How can I assist you today?\na) Create an irresistible offer/sales funnel\nb) Price optimization for your products\nc) Data analytics for your uploaded CSV file");
+    if (!hasRun.current && data?.history?.length === 1) {
+      const initialMessage = "Hello! I'm VEGA, your AI Business Consultant. To get started, could you please tell me the name of your company?";
+      add(initialMessage, true);
     }
+    hasRun.current = true;
   }, [data]);
 
   return (
@@ -122,6 +118,7 @@ const NewPrompt = ({ data }) => {
           <Markdown>{message.parts[0].text}</Markdown>
         </div>
       ))}
+      {question && <div className="message user">{question}</div>}
       {answer && (
         <div className="message">
           <Markdown>{answer}</Markdown>
@@ -131,7 +128,7 @@ const NewPrompt = ({ data }) => {
       <form className="newForm" onSubmit={handleSubmit} ref={formRef}>
         <Upload setImg={setImg} />
         <input id="file" type="file" multiple={false} hidden />
-        <input type="text" name="text" placeholder="Type your message here..." />
+        <input type="text" name="text" placeholder="Ask for business advice..." />
         <button type="submit">
           <img src="/arrow.png" alt="" />
         </button>
