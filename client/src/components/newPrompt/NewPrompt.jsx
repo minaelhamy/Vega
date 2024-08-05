@@ -15,6 +15,7 @@ const NewPrompt = ({ data }) => {
     dbData: {},
     aiData: {},
   });
+  const [stage, setStage] = useState('initial');
 
   const endRef = useRef(null);
   const formRef = useRef(null);
@@ -26,18 +27,14 @@ const NewPrompt = ({ data }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: (updateData) => {
       return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${data._id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          question: question.length ? question : undefined,
-          answer,
-          img: img.dbData?.filePath || undefined,
-        }),
+        body: JSON.stringify(updateData),
       }).then((res) => res.json());
     },
     onSuccess: () => {
@@ -75,10 +72,11 @@ const NewPrompt = ({ data }) => {
         setAnswer(accumulatedText);
       }
 
-      // Ask for feedback after providing the answer
-      setAnswer(accumulatedText + "\n\nHow would you rate this advice on a scale of 1-10? Your feedback helps me improve.");
-
-      mutation.mutate();
+      mutation.mutate({
+        question: text,
+        answer: accumulatedText,
+        img: img.dbData?.filePath || undefined,
+      });
     } catch (err) {
       console.error("Error in AI consultation:", err);
       setAnswer("I apologize, but I encountered an error. Please try again.");
@@ -95,13 +93,17 @@ const NewPrompt = ({ data }) => {
   };
 
   // Initial message handler
-  const hasRun = useRef(false);
-
   useEffect(() => {
-    if (!hasRun.current && data?.history?.length === 1) {
-      add(data.history[0].parts[0].text, true);
+    if (data?.history?.length === 0) {
+      setStage('askName');
+      setAnswer("Hello, what is the name of your company?");
+    } else if (data?.history?.length === 2) {
+      setStage('askBrief');
+      setAnswer("Please write a brief about your company, its business model, and how it operates.");
+    } else if (data?.history?.length === 4) {
+      setStage('mainMenu');
+      setAnswer("How can I assist you today?\na) Create an irresistible offer/sales funnel\nb) Price optimization for your products\nc) Data analytics for your uploaded CSV file");
     }
-    hasRun.current = true;
   }, [data]);
 
   return (
@@ -115,7 +117,11 @@ const NewPrompt = ({ data }) => {
           transformation={[{ width: 380 }]}
         />
       )}
-      {question && <div className="message user">{question}</div>}
+      {data?.history?.map((message, index) => (
+        <div key={index} className={`message ${message.role === 'user' ? 'user' : ''}`}>
+          <Markdown>{message.parts[0].text}</Markdown>
+        </div>
+      ))}
       {answer && (
         <div className="message">
           <Markdown>{answer}</Markdown>
@@ -125,7 +131,7 @@ const NewPrompt = ({ data }) => {
       <form className="newForm" onSubmit={handleSubmit} ref={formRef}>
         <Upload setImg={setImg} />
         <input id="file" type="file" multiple={false} hidden />
-        <input type="text" name="text" placeholder="Ask for business advice..." />
+        <input type="text" name="text" placeholder="Type your message here..." />
         <button type="submit">
           <img src="/arrow.png" alt="" />
         </button>
