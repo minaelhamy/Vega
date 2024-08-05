@@ -53,10 +53,7 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
     // CREATE A NEW CHAT
     const newChat = new Chat({
       userId: userId,
-      history: [
-        { role: "system", parts: [{ text: "You are VEGA, an AI Business Consultant." }] },
-        { role: "user", parts: [{ text }] }
-      ],
+      history: [{ role: "user", parts: [{ text }] }],
     });
 
     const savedChat = await newChat.save();
@@ -174,46 +171,6 @@ app.delete("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).send("Error deleting chat!");
-  }
-});
-
-app.get("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
-  const userId = req.auth.userId;
-  console.log("Received request for chat session. User ID:", userId);
-
-  try {
-    let chat = await Chat.findOne({ userId });
-
-    if (!chat) {
-      console.log("No existing chat found. Creating new chat for user:", userId);
-      chat = new Chat({ userId });
-      await chat.save();
-    } else {
-      console.log("Existing chat found for user:", userId);
-    }
-
-    res.status(200).json(chat);
-  } catch (err) {
-    console.error('Error in GET /api/chat-session:', err);
-    res.status(500).json({ error: 'Internal Server Error', details: err.message });
-  }
-});
-
-app.put("/api/chat-session", ClerkExpressRequireAuth(), async (req, res) => {
-  const userId = req.auth.userId;
-  const { companyName, companyBrief, history } = req.body;
-
-  try {
-    const chat = await Chat.findOneAndUpdate(
-      { userId },
-      { $set: { companyName, companyBrief }, $push: { history: { $each: history } } },
-      { new: true, upsert: true }
-    );
-
-    res.status(200).json(chat);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error updating chat session");
   }
 });
 

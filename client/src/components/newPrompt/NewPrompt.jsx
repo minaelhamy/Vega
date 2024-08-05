@@ -75,6 +75,9 @@ const NewPrompt = ({ data }) => {
         setAnswer(accumulatedText);
       }
 
+      // Ask for feedback after providing the answer
+      setAnswer(accumulatedText + "\n\nHow would you rate this advice on a scale of 1-10? Your feedback helps me improve.");
+
       mutation.mutate();
     } catch (err) {
       console.error("Error in AI consultation:", err);
@@ -96,8 +99,7 @@ const NewPrompt = ({ data }) => {
 
   useEffect(() => {
     if (!hasRun.current && data?.history?.length === 1) {
-      const initialMessage = "Hello! I'm VEGA, your AI Business Consultant. To get started, could you please tell me the name of your company?";
-      add(initialMessage, true);
+      add(data.history[0].parts[0].text, true);
     }
     hasRun.current = true;
   }, [data]);
@@ -113,11 +115,6 @@ const NewPrompt = ({ data }) => {
           transformation={[{ width: 380 }]}
         />
       )}
-      {data?.history?.map((message, index) => (
-        <div key={index} className={`message ${message.role === 'user' ? 'user' : ''}`}>
-          <Markdown>{message.parts[0].text}</Markdown>
-        </div>
-      ))}
       {question && <div className="message user">{question}</div>}
       {answer && (
         <div className="message">

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
+
   const navigate = useNavigate();
 
   const mutation = useMutation({
@@ -18,6 +19,7 @@ const DashboardPage = () => {
       }).then((res) => res.json());
     },
     onSuccess: (id) => {
+      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["userChats"] });
       navigate(`/dashboard/chats/${id}`);
     },
@@ -30,7 +32,6 @@ const DashboardPage = () => {
 
     mutation.mutate(text);
   };
-
   return (
     <div className="dashboardPage">
       <div className="texts">
@@ -41,22 +42,22 @@ const DashboardPage = () => {
         <div className="options">
           <div className="option">
             <img src="/chat.png" alt="" />
-            <span>Chat with VEGA</span>
+            <span>Create a New Chat</span>
           </div>
           <div className="option">
             <img src="/image.png" alt="" />
-            <span>Image Analysis</span>
+            <span>Analyze Data</span>
           </div>
           <div className="option">
             <img src="/code.png" alt="" />
-            <span>Code Assistance</span>
+            <span>Create an Irresistible Offer</span>
           </div>
         </div>
       </div>
       <div className="formContainer">
         <form onSubmit={handleSubmit}>
           <input type="text" name="text" placeholder="Ask me anything..." />
-          <button type="submit">
+          <button>
             <img src="/arrow.png" alt="" />
           </button>
         </form>
